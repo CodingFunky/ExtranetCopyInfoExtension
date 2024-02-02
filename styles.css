@@ -1,0 +1,40 @@
+.order-id-copy-button {
+    background-color: #dbfdec; /* Green */
+    border: none;
+    border-radius: 5%;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    margin-left: 10px;
+    cursor:pointer;
+  }
+
+  /* Style for copy buttons */
+.header-copy-button {
+    font-size: small;
+    cursor: pointer;
+    margin-left: 5px;
+    border: none;
+    background: none;
+    opacity: 0;
+    transition: opacity 0.3s; /* Smooth transition for opacity change */
+}
+
+/* Show the button on column hover */
+.header-copy-button:hover {
+    opacity: 1;
+}
+
+.total-copy-button {
+    cursor: pointer;
+    background-color: pink; /* Example color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    /* Adjust the positioning if needed */
+}
