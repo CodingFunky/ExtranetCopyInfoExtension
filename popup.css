@@ -1,0 +1,20 @@
+/* Styles for the Disable/Enable Button */
+#disableBtn {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 10px 20px; /* Padding around the text */
+    margin: 10px 0; /* Some margin around the button */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Cursor changes to pointer to indicate it's clickable */
+    transition: background-color 0.3s; /* Smooth transition for background color change */
+}
+
+#disableBtn:hover {
+    background-color: #45a049; /* Darker shade of green on hover */
+}
+
+#disableBtn:disabled {
+    background-color: #ccc; /* Gray background for disabled state */
+    cursor: not-allowed; /* Cursor indicates the button is not clickable */
+}
