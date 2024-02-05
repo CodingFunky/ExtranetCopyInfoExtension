@@ -1,11 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Extension Options</title>
-    <link rel="stylesheet" href="popup.css">
-</head>
-<body>
-    <button id="disableBtn">Disable</button>
-    <script src="popup.js"></script>
-</body>
+    <link rel="stylesheet" href="popup.css" />
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <label class="switch">
+      <input type="checkbox" id="disableToggle" />
+      <span class="slider round"></span>
+    </label>
+  </body>
 </html>
