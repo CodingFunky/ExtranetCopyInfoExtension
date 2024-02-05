@@ -46,11 +46,11 @@ body {
   }
   
   input:checked + .slider {
-    background-color: #4CAF50; /* Green background when enabled */
+    background-color: #4c72af; /* Green background when enabled */
   }
   
   input:focus + .slider {
-    box-shadow: 0 0 1px #4CAF50;
+    box-shadow: 0 0 1px #4c72af;
   }
   
   input:checked + .slider:before {
