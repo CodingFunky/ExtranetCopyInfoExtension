@@ -1,6 +1,12 @@
 /* Styles for the Disable/Enable Button */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 180px;
+}
 #disableBtn {
-    background-color: #4CAF50; /* Green background */
+    background-color: rgb(17, 138, 159); /* Green background */
     color: white; /* White text */
     padding: 10px 20px; /* Padding around the text */
     margin: 10px 0; /* Some margin around the button */
@@ -11,7 +17,7 @@
 }
 
 #disableBtn:hover {
-    background-color: #45a049; /* Darker shade of green on hover */
+    background-color: rgb(12, 107, 124); /* Darker shade of green on hover */
 }
 
 #disableBtn:disabled {

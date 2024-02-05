@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Extranet Copy Buttons",
-    "version": "1.0",
+    "version": "1.5",
     "description": "A Chrome extension to copy order IDs and other information from Extranet with a click of a button",
     "permissions": [
         "clipboardWrite", "storage"
