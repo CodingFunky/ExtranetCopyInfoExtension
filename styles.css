@@ -27,14 +27,3 @@
 .header-copy-button:hover {
     opacity: 1;
 }
-
-.total-copy-button {
-    cursor: pointer;
-    background-color: pink; /* Example color */
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 5px 10px;
-    font-size: 12px;
-    /* Adjust the positioning if needed */
-}
