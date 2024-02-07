@@ -38,7 +38,7 @@ chrome.storage.sync.get("disabled", (data) => {
       tr.querySelectorAll("td").forEach((td) => {
         // Create a copy button
         const copyBtn = document.createElement("button");
-        copyBtn.innerHTML = "📋"; // Use an actual icon or image in a real implementation
+        copyBtn.innerHTML = '<i class="far fa-copy"></i>' // Use an actual icon or image in a real implementation
         copyBtn.style.cursor = "pointer";
         copyBtn.style.marginLeft = "5px";
         copyBtn.style.border = "none";
@@ -118,7 +118,7 @@ chrome.storage.sync.get("disabled", (data) => {
         ) {
           // Create a copy button
           const copyButton = document.createElement("button");
-          copyButton.innerHTML = "📋"; // Consider using an actual icon
+          copyButton.innerHTML = '<i class="far fa-copy"></i>'; // Consider using an actual icon
           copyButton.classList.add("header-copy-button");
 
           copyButton.onclick = function () {
