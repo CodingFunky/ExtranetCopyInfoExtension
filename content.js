@@ -68,10 +68,13 @@ chrome.storage.sync.get("disabled", (data) => {
               textToCopy = grandTotal; // This is the last numeric value, which should be the grand total
             }
           } else {
-            textToCopy = td.textContent.trim();
-          }
+            // Replace sequences of whitespace characters with a single space and then trim
+            textToCopy = td.textContent.replace(/\s+/g, ' ').trim();
+        }
+            
           // Remove the clipboard icon "📋" from the end of the text
           textToCopy = textToCopy.replace(/📋$/u, "");
+          console.log(textToCopy)
 
           // Copy accumulated text to clipboard
           navigator.clipboard.writeText(textToCopy).then(() => {
