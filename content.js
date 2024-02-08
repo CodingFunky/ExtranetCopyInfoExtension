@@ -74,6 +74,7 @@ chrome.storage.sync.get("disabled", (data) => {
             
           // Remove the clipboard icon "📋" from the end of the text
           textToCopy = textToCopy.replace(/📋$/u, "");
+          textToCopy = textToCopy.replace(/✅$/u, "");
           console.log(textToCopy)
 
           // Copy accumulated text to clipboard
