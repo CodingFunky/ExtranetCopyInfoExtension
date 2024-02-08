@@ -81,10 +81,10 @@ chrome.storage.sync.get("disabled", (data) => {
           navigator.clipboard.writeText(textToCopy).then(() => {
             // Provide feedback that text was copied
             const originalContent = copyBtn.innerHTML;
-            copyBtn.innerHTML = "✅"; // Indicate success
+            copyBtn.style.opacity = "0"
             setTimeout(() => {
-              copyBtn.innerHTML = originalContent; // Revert content after 2 seconds
-            }, 2000);
+              copyBtn.style.opacity = "1"; // Revert content after 2 seconds
+            }, 300);
           });
         };
 
