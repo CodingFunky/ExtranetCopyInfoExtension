@@ -38,7 +38,7 @@ chrome.storage.sync.get("disabled", (data) => {
       tr.querySelectorAll("td").forEach((td) => {
         // Create a copy button
         const copyBtn = document.createElement("button");
-        copyBtn.innerHTML = '<i class="far fa-copy"></i>' // Use an actual icon or image in a real implementation
+        copyBtn.innerHTML = '<i class="far fa-copy"></i>'; // Use an actual icon or image in a real implementation
         copyBtn.style.cursor = "pointer";
         copyBtn.style.marginLeft = "5px";
         copyBtn.style.border = "none";
@@ -69,19 +69,19 @@ chrome.storage.sync.get("disabled", (data) => {
             }
           } else {
             // Replace sequences of whitespace characters with a single space and then trim
-            textToCopy = td.textContent.replace(/\s+/g, ' ').trim();
-        }
-            
+            textToCopy = td.textContent.replace(/\s+/g, " ").trim();
+          }
+
           // Remove the clipboard icon "📋" from the end of the text
           textToCopy = textToCopy.replace(/📋$/u, "");
           textToCopy = textToCopy.replace(/✅$/u, "");
-          console.log(textToCopy)
+          console.log(textToCopy);
 
           // Copy accumulated text to clipboard
           navigator.clipboard.writeText(textToCopy).then(() => {
             // Provide feedback that text was copied
             const originalContent = copyBtn.innerHTML;
-            copyBtn.style.opacity = "0"
+            copyBtn.style.opacity = "0";
             setTimeout(() => {
               copyBtn.style.opacity = "1"; // Revert content after 2 seconds
             }, 300);
@@ -138,10 +138,10 @@ chrome.storage.sync.get("disabled", (data) => {
               navigator.clipboard.writeText(textToCopy).then(() => {
                 // Provide feedback that text was copied
                 const originalIcon = copyButton.innerHTML;
-                copyButton.innerHTML = "✅"; // Indicate success
+                copyButton.style.opacity = "0";
                 setTimeout(() => {
-                  copyButton.innerHTML = originalIcon; // Revert content after 2 seconds
-                }, 2000);
+                  copyButton.style.opacity = "1"; // Revert content after 2 seconds
+                }, 300);
               });
             }
           };
