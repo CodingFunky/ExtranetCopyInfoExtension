@@ -1,3 +1,14 @@
+// Returns true if a table cell has real text worth copying — i.e. it isn't just
+// a form field, toggle switch, checkbox, or empty. (Action links like "Edit"
+// still count as text, per "any column with text is worth a copy button".)
+function cellHasCopyableText(td) {
+  const clone = td.cloneNode(true);
+  clone
+    .querySelectorAll("input, select, textarea, button, .switch")
+    .forEach((el) => el.remove());
+  return (clone.textContent || "").replace(/\s+/g, " ").trim().length > 0;
+}
+
 chrome.storage.sync.get("disabled", (data) => {
   if (!data.disabled) {
     // Extension is enabled; proceed with the script's functionality
@@ -33,9 +44,12 @@ chrome.storage.sync.get("disabled", (data) => {
       }
     }
 
-    // ADDS COPY BUTTON TO ALL TABLE ELEMENTS **TEMP**
+    // ADDS A COPY BUTTON TO EVERY TABLE CELL THAT HAS COPYABLE TEXT
     document.querySelectorAll("tr").forEach((tr) => {
       tr.querySelectorAll("td").forEach((td) => {
+        // Skip cells that are just a form field, toggle, checkbox, or empty.
+        if (!cellHasCopyableText(td)) return;
+
         // Create a copy button
         const copyBtn = document.createElement("button");
         copyBtn.innerHTML = '<i class="far fa-copy"></i>'; // Use an actual icon or image in a real implementation
