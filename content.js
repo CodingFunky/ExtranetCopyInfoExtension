@@ -189,7 +189,7 @@ function initProductIdFeature() {
   addIdHeaderChips(ctx);
   addInlineIdButtons();
   addCopyAllTicketTypesButton(ctx);
-  addProductTicketTypeLoaders();
+  addProductsIndexButtons();
   recordProductHistory(ctx);
 }
 
@@ -349,6 +349,10 @@ function addInlineIdButtons() {
     }
     if (!id) return;
 
+    // The products index already shows the ID in its own column with a copy
+    // button, and gets its own per-row "Copy" button below, so skip it here.
+    if (label === "product" && onProductsIndex) return;
+
     // Only decorate links inside list rows or the products index, so we don't
     // clutter form footers ("Cancel"/"Setup") and one-off links.
     if (!(a.closest("td") || onProductsIndex)) return;
@@ -469,145 +473,168 @@ async function fetchTicketTypes(productId) {
   return tts;
 }
 
-// On the products index, add a per-row "Ticket types" button that loads the IDs
-// inline (and into history) via a background fetch, no navigation required.
-function addProductTicketTypeLoaders() {
+// Format one product (name + ID + its ticket types) as a readable block.
+function formatProductBlock(p) {
+  const header =
+    (p.name ? p.name + " " : "") + "(Product ID: " + p.productId + ")";
+  if (p.error) return header + "\n  (couldn't load ticket types)";
+  const tts = p.ticketTypes || [];
+  if (tts.length === 0) return header + "\n  (no ticket types)";
+  return (
+    header +
+    "\n" +
+    tts.map((t) => "  " + (t.name || "Ticket type") + "\t" + t.id).join("\n")
+  );
+}
+
+// Collect the products listed on the store products index: { productId, name,
+// link, cell }, one entry per product (the name links to /products/{id}/edit).
+function collectProductsIndexRows() {
+  const rows = [];
+  const seen = new Set();
+  document
+    .querySelectorAll('table a[href*="/admin/products/"]')
+    .forEach((a) => {
+      const m = (a.getAttribute("href") || "").match(
+        /\/admin\/products\/(\d+)\/edit/,
+      );
+      if (!m) return;
+      const cell = a.closest("td");
+      if (!cell || seen.has(m[1])) return;
+      seen.add(m[1]);
+      rows.push({ productId: m[1], name: a.textContent.trim(), link: a, cell });
+    });
+  return rows;
+}
+
+// On the store products index, add: (1) a per-row button next to each product
+// name that copies that product + all its ticket types, and (2) a single button
+// up top that copies every product with its ticket types.
+function addProductsIndexButtons() {
   const onProductsIndex = /\/admin\/(?:stores\/\d+\/)?products\/?$/.test(
     location.pathname,
   );
   if (!onProductsIndex) return;
 
-  document.querySelectorAll('a[href*="/admin/products/"]').forEach((a) => {
-    if (a.closest(".breadcrumbs")) return;
-    const m = (a.getAttribute("href") || "").match(
-      /\/admin\/products\/(\d+)\/edit/,
-    );
-    if (!m) return;
+  const rows = collectProductsIndexRows();
+  if (rows.length === 0) return;
 
-    const cell = a.closest("td");
-    if (!cell || cell.querySelector(".ext-tt-load")) return;
-
-    const productId = m[1];
-    const name = a.textContent.trim();
+  rows.forEach((r) => {
+    if (r.cell.querySelector(".ext-prod-copy")) return;
 
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "ext-tt-load";
-    btn.textContent = "Ticket types ▾";
-    btn.title = "Load this product's ticket type IDs";
-
-    const panel = document.createElement("div");
-    panel.className = "ext-tt-panel";
-    panel.style.display = "none";
-
-    let loaded = false;
-    let loading = false;
+    btn.className = "ext-prod-copy";
+    btn.textContent = "Copy";
+    btn.title = "Copy product name, ID, and all ticket types";
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
-      const show = panel.style.display === "none";
-      panel.style.display = show ? "block" : "none";
-      btn.classList.toggle("ext-open", show);
-      if (!show || loaded || loading) return;
-
-      loading = true;
-      panel.textContent = "";
-      const msg = document.createElement("span");
-      msg.className = "ext-tt-msg";
-      msg.textContent = "Loading…";
-      panel.appendChild(msg);
-
+      if (btn.dataset.busy === "1") return;
+      btn.dataset.busy = "1";
+      btn.textContent = "…";
       try {
-        const tts = await fetchTicketTypes(productId);
-        loaded = true;
-        renderTicketTypePanel(panel, productId, name, tts);
-        upsertProductHistory({ productId, name, ticketTypes: tts });
+        const tts = await fetchTicketTypes(r.productId);
+        upsertProductHistory({
+          productId: r.productId,
+          name: r.name,
+          ticketTypes: tts,
+        });
+        await navigator.clipboard.writeText(
+          formatProductBlock({
+            productId: r.productId,
+            name: r.name,
+            ticketTypes: tts,
+          }),
+        );
+        btn.textContent = "Copied!";
       } catch (err) {
-        panel.textContent = "";
-        const err1 = document.createElement("span");
-        err1.className = "ext-tt-msg ext-tt-error";
-        err1.textContent = "Couldn't load. ";
-        const link = document.createElement("a");
-        link.href =
-          "https://www.liftopia.com/admin/products/" +
-          productId +
-          "/ticket-types";
-        link.target = "_blank";
-        link.rel = "noopener";
-        link.textContent = "Open page ↗";
-        err1.appendChild(link);
-        panel.appendChild(err1);
-      } finally {
-        loading = false;
+        btn.textContent = "Failed";
       }
+      setTimeout(() => {
+        btn.textContent = "Copy";
+        btn.dataset.busy = "0";
+      }, 1500);
     });
 
-    // Sit after the product-ID copy button if it's already there.
-    const after =
-      a.nextElementSibling &&
-      a.nextElementSibling.classList.contains("ext-id-copy")
-        ? a.nextElementSibling
-        : a;
-    after.insertAdjacentElement("afterend", btn);
-    cell.appendChild(panel);
+    r.link.insertAdjacentElement("afterend", btn);
   });
+
+  addCopyAllProductsButton(rows);
 }
 
-// Render the fetched ticket types into a product's inline panel.
-function renderTicketTypePanel(panel, productId, name, tts) {
-  panel.textContent = "";
+// Add the top-of-list "copy everything" button next to the products card title.
+function addCopyAllProductsButton(rows) {
+  if (document.querySelector(".ext-copy-all-products")) return;
 
-  if (tts.length === 0) {
-    const m = document.createElement("div");
-    m.className = "ext-tt-msg";
-    m.textContent = "No ticket types on this product.";
-    panel.appendChild(m);
-    return;
+  const firstLink = document.querySelector(
+    'table a[href*="/admin/products/"][href*="/edit"]',
+  );
+  const table = firstLink ? firstLink.closest("table") : null;
+  const card = table ? table.closest(".v-card, .v-sheet") : null;
+  const host = card ? card.querySelector(".v-card__title") : null;
+  if (!host && !table) return;
+
+  const label = "Copy all products + ticket types";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ext-copy-all-products";
+  btn.textContent = label;
+  btn.title = "Fetch every product's ticket types and copy the whole list";
+  btn.addEventListener("click", () => copyAllProducts(btn, rows, label));
+
+  if (host) host.appendChild(btn);
+  else table.parentNode.insertBefore(btn, table);
+}
+
+// Background-fetch every product's ticket types (throttled) and copy the lot.
+async function copyAllProducts(btn, rows, label) {
+  if (btn.dataset.busy === "1") return;
+  btn.dataset.busy = "1";
+  btn.disabled = true;
+
+  const total = rows.length;
+  const results = new Array(total);
+  const CONCURRENCY = 5;
+  let cursor = 0;
+  let done = 0;
+
+  async function worker() {
+    while (cursor < total) {
+      const i = cursor++;
+      const r = rows[i];
+      try {
+        const tts = await fetchTicketTypes(r.productId);
+        results[i] = { productId: r.productId, name: r.name, ticketTypes: tts };
+        upsertProductHistory({
+          productId: r.productId,
+          name: r.name,
+          ticketTypes: tts,
+        });
+      } catch (err) {
+        results[i] = { productId: r.productId, name: r.name, error: true };
+      }
+      done++;
+      btn.textContent = "Loading " + done + "/" + total + "…";
+    }
   }
 
-  const head = document.createElement("div");
-  head.className = "ext-tt-head";
-  const count = document.createElement("span");
-  count.textContent = tts.length + " ticket types";
-  head.appendChild(count);
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, total) }, worker),
+  );
 
-  const copyAll = document.createElement("button");
-  copyAll.type = "button";
-  copyAll.className = "ext-tt-copyall";
-  copyAll.textContent = "Copy all";
-  copyAll.title = "Copy product + all ticket types";
-  copyAll.addEventListener("click", () => {
-    const header = name
-      ? name + " (Product ID: " + productId + ")"
-      : "Product ID: " + productId;
-    const text =
-      header +
-      "\n\n" +
-      tts.map((t) => (t.name || "Ticket type") + "\t" + t.id).join("\n");
-    copyWithFeedback(text, copyAll, "Copied!");
-  });
-  head.appendChild(copyAll);
-  panel.appendChild(head);
+  const text = results.map(formatProductBlock).join("\n\n");
+  try {
+    // The click's user activation may have expired during the long fetch; if
+    // the clipboard write is rejected, the data is still in the popup history.
+    await navigator.clipboard.writeText(text);
+    btn.textContent = "Copied " + total + " products!";
+  } catch (err) {
+    btn.textContent = "Loaded " + total + " — see popup";
+  }
 
-  tts.forEach((t) => {
-    const row = document.createElement("div");
-    row.className = "ext-tt-item";
-
-    const lab = document.createElement("span");
-    lab.className = "ext-tt-name";
-    lab.textContent = t.name || "Ticket type";
-
-    const val = document.createElement("span");
-    val.className = "ext-tt-id";
-    val.textContent = t.id;
-
-    const cp = document.createElement("button");
-    cp.type = "button";
-    cp.className = "ext-id-copy";
-    cp.textContent = "📋";
-    cp.title = "Copy ticket type ID " + t.id;
-    cp.addEventListener("click", () => copyWithFeedback(t.id, cp, "✓"));
-
-    row.append(lab, val, cp);
-    panel.appendChild(row);
-  });
+  setTimeout(() => {
+    btn.textContent = label;
+    btn.disabled = false;
+    btn.dataset.busy = "0";
+  }, 2500);
 }

@@ -119,54 +119,9 @@ td:hover > .ext-id-copy {
   background-color: #9be7bf;
 }
 
-/* ---- Inline "load ticket types" on the products index ---- */
-.ext-tt-load {
+/* ---- Products index: per-row copy + top "copy all" ---- */
+.ext-prod-copy {
   margin-left: 8px;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  padding: 3px 7px;
-  border: 1px solid #c7d2e5;
-  border-radius: 5px;
-  background-color: #eef2f9;
-  color: #34507e;
-  cursor: pointer;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-
-.ext-tt-load:hover {
-  background-color: #e1e8f4;
-}
-
-.ext-tt-load.ext-open {
-  background-color: #34507e;
-  color: #fff;
-  border-color: #34507e;
-}
-
-.ext-tt-panel {
-  margin: 6px 0 2px;
-  padding: 6px 8px;
-  border: 1px solid #e3e8f0;
-  border-radius: 6px;
-  background-color: #fafbfd;
-  font-size: 12px;
-  max-width: 320px;
-}
-
-.ext-tt-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
-  font-weight: 700;
-  color: #6b7280;
-}
-
-.ext-tt-copyall {
   font-family: inherit;
   font-size: 11px;
   font-weight: 600;
@@ -177,41 +132,34 @@ td:hover > .ext-id-copy {
   background-color: #dbfdec;
   color: #0b6b3a;
   cursor: pointer;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
-.ext-tt-copyall:hover {
+.ext-prod-copy:hover {
   background-color: #c4f7dd;
 }
 
-.ext-tt-copyall.ext-copied {
-  background-color: #9be7bf;
+.ext-copy-all-products {
+  margin-left: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 7px 12px;
+  border: 1px solid #aee9c9;
+  border-radius: 6px;
+  background-color: #dbfdec;
+  color: #0b6b3a;
+  cursor: pointer;
+  vertical-align: middle;
 }
 
-.ext-tt-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0;
+.ext-copy-all-products:hover {
+  background-color: #c4f7dd;
 }
 
-.ext-tt-name {
-  flex: 1 1 auto;
-  color: #374151;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ext-tt-id {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-weight: 700;
-  color: #111827;
-}
-
-.ext-tt-msg {
-  color: #6b7280;
-}
-
-.ext-tt-error {
-  color: #b4232c;
+.ext-copy-all-products:disabled {
+  opacity: 0.7;
+  cursor: default;
 }
