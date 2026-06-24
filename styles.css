@@ -93,3 +93,28 @@ td:hover > .ext-id-copy {
 .ext-id-copy.ext-copied {
   opacity: 1;
 }
+
+.ext-copy-all {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 7px 12px;
+  border: 1px solid #aee9c9;
+  border-radius: 6px;
+  background-color: #dbfdec;
+  color: #0b6b3a;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.ext-copy-all:hover {
+  background-color: #c4f7dd;
+}
+
+.ext-copy-all.ext-copied {
+  background-color: #9be7bf;
+}

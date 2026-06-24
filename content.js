@@ -188,7 +188,46 @@ function initProductIdFeature() {
   const ctx = getProductContext();
   addIdHeaderChips(ctx);
   addInlineIdButtons();
+  addCopyAllTicketTypesButton();
   recordProductHistory(ctx);
+}
+
+// On the Ticket Types list page, add a single button that copies every ticket
+// type as "Name<tab>ID" lines (tab-separated so it pastes into a spreadsheet).
+function addCopyAllTicketTypesButton() {
+  const tts = collectTicketTypesOnPage();
+  if (tts.length === 0) return;
+  if (document.querySelector(".ext-copy-all")) return;
+
+  // Prefer the "Ticket Types" card title; otherwise sit just above the table.
+  let host = null;
+  document.querySelectorAll("h2.v-card__title").forEach((h2) => {
+    if (!host && /ticket types/i.test(h2.textContent.trim())) host = h2;
+  });
+  const firstEdit = document.querySelector(
+    'a[href*="/ticket-types/"][href*="/edit"]',
+  );
+  const table = firstEdit ? firstEdit.closest("table") : null;
+  if (!host && !table) return;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ext-copy-all";
+  btn.textContent = "Copy all ticket types";
+  btn.title = "Copy every ticket type name + ID";
+  btn.addEventListener("click", () => {
+    const list = collectTicketTypesOnPage();
+    const text = list
+      .map((t) => (t.name || "Ticket type") + "\t" + t.id)
+      .join("\n");
+    copyWithFeedback(text, btn, "Copied " + list.length + " ticket types!");
+  });
+
+  if (host) {
+    host.appendChild(btn);
+  } else {
+    table.parentNode.insertBefore(btn, table);
+  }
 }
 
 // Derive product id / slug / name / ticket-type id from the URL + breadcrumbs.
