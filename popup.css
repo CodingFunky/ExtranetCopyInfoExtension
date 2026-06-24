@@ -1,7 +1,11 @@
 :root {
   --bg: #eef1f7;
+  --page-grad: linear-gradient(180deg, #f4f6fa 0%, #e9edf4 100%);
+  --frame: #d9deea;
+  --card-bg: #ffffff;
   --surface-2: #f4f6fa;
   --border: #e2e6ee;
+  --border-hover: #d7dbe4;
   --border-soft: #eef1f6;
   --text: #0f172a;
   --muted: #64748b;
@@ -12,8 +16,45 @@
   --green-bg: #e7f8ef;
   --green-bg-hover: #d4f1e1;
   --green-border: #b6e6cd;
+  --copied-bg: #b9ecce;
+  --input-focus-bg: #ffffff;
+  --switch-track: #cbd5e1;
+  --switch-knob: #ffffff;
+  --scroll-thumb: #d3d9e4;
+  --scroll-thumb-hover: #c0c8d6;
   --radius: 12px;
   --shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.07);
+  --shadow-hover: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1c20;
+    --page-grad: linear-gradient(180deg, #24262d 0%, #1c1d22 100%);
+    --frame: #3a3d45;
+    --card-bg: #25272e;
+    --surface-2: #2d3038;
+    --border: #383b43;
+    --border-hover: #4a4d56;
+    --border-soft: #30333b;
+    --text: #e7e9ee;
+    --muted: #9aa3b2;
+    --muted-2: #6f7682;
+    --accent: #8b8cf0;
+    --accent-weak: #2b2c44;
+    --green: #5fd2a0;
+    --green-bg: #143a2c;
+    --green-bg-hover: #1a4a38;
+    --green-border: #235c46;
+    --copied-bg: #1f6b4d;
+    --input-focus-bg: #2d3038;
+    --switch-track: #4a4d56;
+    --switch-knob: #e7e9ee;
+    --scroll-thumb: #3a3d45;
+    --scroll-thumb-hover: #4a4d56;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
 }
 
 * {
@@ -28,11 +69,12 @@ body {
   width: 340px;
   margin: 0;
   padding: 14px 13px 16px;
+  border: 1px solid var(--frame);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
   font-size: 13px;
   color: var(--text);
-  background: linear-gradient(180deg, #f4f6fa 0%, #e9edf4 100%);
+  background: var(--page-grad);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -112,7 +154,7 @@ body {
 
 .filter:focus {
   outline: none;
-  background: #fff;
+  background: var(--input-focus-bg);
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-weak);
 }
@@ -130,12 +172,12 @@ body {
 }
 
 .history-list::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--scroll-thumb);
   border-radius: 8px;
 }
 
 .history-list::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--scroll-thumb-hover);
 }
 
 .empty {
@@ -149,7 +191,7 @@ body {
 .product {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--card-bg);
   padding: 10px 12px;
   margin-bottom: 8px;
   box-shadow: var(--shadow);
@@ -159,8 +201,8 @@ body {
 }
 
 .product:hover {
-  border-color: #d7dbe4;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-hover);
 }
 
 .product-head {
@@ -213,7 +255,7 @@ a.product-name:hover {
 }
 
 .copy-btn.copied {
-  background: #b9ecce;
+  background: var(--copied-bg);
 }
 
 .tt-fetch-btn {
@@ -301,7 +343,7 @@ a.id-link:hover {
   position: absolute;
   inset: 0;
   cursor: pointer;
-  background: #cbd5e1;
+  background: var(--switch-track);
   border-radius: 999px;
   transition: 0.25s;
 }
@@ -313,7 +355,7 @@ a.id-link:hover {
   width: 16px;
   left: 3px;
   bottom: 3px;
-  background: #fff;
+  background: var(--switch-knob);
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   transition: 0.25s;
