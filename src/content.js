@@ -63,7 +63,6 @@ chrome.storage.sync.get("disabled", (data) => {
         copyBtn.onclick = function () {
           let textToCopy = "";
 
-          console.log("clicked");
           // Check if the text contains a ticket number pattern ("T" followed by numbers)
           if (/T\d+/.test(td.textContent)) {
             // Splitting text content based on the pattern "T" followed by numbers
@@ -89,7 +88,6 @@ chrome.storage.sync.get("disabled", (data) => {
           // Remove the clipboard icon "📋" from the end of the text
           textToCopy = textToCopy.replace(/📋$/u, "");
           textToCopy = textToCopy.replace(/✅$/u, "");
-          console.log(textToCopy);
 
           // Copy accumulated text to clipboard
           navigator.clipboard.writeText(textToCopy).then(() => {
