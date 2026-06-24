@@ -8,12 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   disableToggle.addEventListener("change", function () {
     const isDisabled = !this.checked;
-    chrome.storage.sync.set({ disabled: isDisabled }, function () {
-      chrome.runtime.sendMessage({
-        action: "toggleDisable",
-        value: isDisabled,
-      });
-    });
+    // Content scripts read this from storage on page load (no live messaging).
+    chrome.storage.sync.set({ disabled: isDisabled });
   });
 
   // ---- Product / ticket type history ----
