@@ -409,7 +409,10 @@ function collectTicketTypes(root) {
       if (tds[1])
         ttName = (tds[1].textContent || "").replace(/\s+/g, " ").trim();
     }
-    out.push({ id: m[1], name: ttName });
+    // Keep the edit URL (it carries the product slug) for popup links.
+    let url = a.getAttribute("href") || "";
+    if (url.startsWith("/")) url = "https://www.liftopia.com" + url;
+    out.push({ id: m[1], name: ttName, url });
   });
   return out;
 }
@@ -433,6 +436,7 @@ function upsertProductHistory({ productId, name, slug, ticketTypes }) {
       const existing = byId.get(t.id);
       if (existing) {
         if (t.name) existing.name = t.name;
+        if (t.url) existing.url = t.url;
       } else {
         byId.set(t.id, t);
       }
