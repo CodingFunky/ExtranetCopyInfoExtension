@@ -1,70 +1,216 @@
-/* Styles for the Disable/Enable Button */
+/* ---- Popup shell ---- */
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 180px;
+  width: 320px;
+  margin: 0;
+  padding: 10px 12px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  color: #1f2937;
+  background: #fff;
 }
-/* The switch - the box around the slider */
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eceff3;
+}
+
+.popup-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ---- History ---- */
+.history {
+  margin-top: 10px;
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  color: #4c72af;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.filter {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border: 1px solid #d7dce3;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.filter:focus {
+  outline: none;
+  border-color: #4c72af;
+}
+
+.history-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.empty {
+  font-size: 12px;
+  color: #9aa3b2;
+  line-height: 1.4;
+  margin: 4px 0 0;
+}
+
+.product {
+  border: 1px solid #eceff3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.product-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.product-name {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-slug {
+  font-size: 11px;
+  color: #9aa3b2;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  flex-shrink: 0;
+}
+
+.id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.id-label {
+  flex: 1 1 auto;
+  color: #4b5563;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-id-row .id-label {
+  font-weight: 600;
+}
+
+.id-value {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-weight: 700;
+  color: #111827;
+}
+
+.copy-btn {
+  flex-shrink: 0;
+  border: 1px solid #aee9c9;
+  border-radius: 5px;
+  background-color: #dbfdec;
+  color: #0b6b3a;
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  background-color: #c4f7dd;
+}
+
+.copy-btn.copied {
+  background-color: #9be7bf;
+}
+
+/* ---- The enable/disable switch (smaller than before) ---- */
 .switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-  }
-  
-  /* Hide default checkbox */
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  /* The slider */
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc; /* Grey background by default */
-    -webkit-transition: .4s; /* Transition for background color */
-    transition: .4s;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  input:checked + .slider {
-    background-color: #4c72af; /* Green background when enabled */
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px #4c72af;
-  }
-  
-  input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
-  
-  /* Rounded sliders */
-  .slider.round {
-    border-radius: 34px;
-  }
-  
-  .slider.round:before {
-    border-radius: 50%;
-  }
-  
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #4c72af;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #4c72af;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(20px);
+  -ms-transform: translateX(20px);
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}

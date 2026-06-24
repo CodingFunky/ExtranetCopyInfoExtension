@@ -166,3 +166,222 @@ chrome.storage.sync.get("disabled", (data) => {
     console.log("Extension is disabled.");
   }
 });
+
+// ============================================================================
+// PRODUCT & TICKET TYPE ID COPY BUTTONS + POPUP HISTORY
+// ----------------------------------------------------------------------------
+// Product IDs live in the page URL (/admin/products/{id}/...). Ticket type IDs
+// only exist inside the "Edit" links on the Ticket Types list page, paired with
+// their title. We expose both as on-page copy buttons and stash everything we
+// learn into chrome.storage.local so the popup can show a browsing history.
+// ============================================================================
+chrome.storage.sync.get("disabled", (data) => {
+  if (data.disabled) return;
+  try {
+    initProductIdFeature();
+  } catch (e) {
+    console.error("Extranet Copy: ID feature failed", e);
+  }
+});
+
+function initProductIdFeature() {
+  const ctx = getProductContext();
+  addIdHeaderChips(ctx);
+  addInlineIdButtons();
+  recordProductHistory(ctx);
+}
+
+// Derive product id / slug / name / ticket-type id from the URL + breadcrumbs.
+function getProductContext() {
+  const path = location.pathname;
+  let productId = null;
+  let slug = null;
+  let name = null;
+  let ticketTypeId = null;
+
+  const pidUrl = path.match(/\/admin\/products\/(\d+)(?:\/|$)/);
+  if (pidUrl) productId = pidUrl[1];
+
+  const ttUrl = path.match(/\/ticket-types\/(\d+)(?:\/edit)?(?:\/|$)/);
+  if (ttUrl) ticketTypeId = ttUrl[1];
+
+  // Breadcrumbs are consistent across admin product pages and carry the product
+  // name (slug link text) plus the numeric product id on ticket-type pages.
+  document.querySelectorAll("a.breadcrumbs__breadcrumb").forEach((a) => {
+    const href = (a.getAttribute("href") || "").replace(/[?#].*$/, "");
+    const slugMatch = href.match(/\/admin\/products\/([a-z0-9][a-z0-9-]*)$/i);
+    if (slugMatch && !/^\d+$/.test(slugMatch[1])) {
+      slug = slugMatch[1];
+      name = a.textContent.trim();
+    }
+    if (!productId) {
+      const pm = href.match(/\/admin\/products\/(\d+)(?:\/|$)/);
+      if (pm) productId = pm[1];
+    }
+  });
+
+  if (!name) {
+    const h1 = document.querySelector("h1.v-page-title");
+    if (h1 && /^Product:/.test(h1.textContent.trim())) {
+      name = h1.textContent.trim().replace(/^Product:\s*/, "");
+    }
+  }
+
+  return { productId, slug, name, ticketTypeId, url: location.href };
+}
+
+// Copy text to the clipboard and give brief visual feedback on the element.
+function copyWithFeedback(text, el, doneLabel) {
+  if (el.dataset.busy === "1") return;
+  navigator.clipboard.writeText(String(text)).then(() => {
+    el.dataset.busy = "1";
+    const original = el.innerHTML;
+    el.innerHTML = doneLabel || "Copied!";
+    el.classList.add("ext-copied");
+    setTimeout(() => {
+      el.innerHTML = original;
+      el.classList.remove("ext-copied");
+      el.dataset.busy = "0";
+    }, 1200);
+  });
+}
+
+// Add labeled "Product ID" / "Ticket Type ID" chips next to the page title.
+function addIdHeaderChips(ctx) {
+  if (!ctx.productId && !ctx.ticketTypeId) return;
+  const title = document.querySelector("h1.v-page-title");
+  if (!title || title.querySelector(".ext-id-chips")) return;
+
+  const wrap = document.createElement("span");
+  wrap.className = "ext-id-chips";
+  if (ctx.productId) wrap.appendChild(makeChip("Product ID", ctx.productId));
+  if (ctx.ticketTypeId)
+    wrap.appendChild(makeChip("Ticket Type ID", ctx.ticketTypeId));
+  title.appendChild(wrap);
+}
+
+function makeChip(label, value) {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "ext-id-chip";
+  chip.innerHTML =
+    '<span class="ext-id-chip__label"></span><span class="ext-id-chip__value"></span>';
+  chip.querySelector(".ext-id-chip__label").textContent = label;
+  chip.querySelector(".ext-id-chip__value").textContent = value;
+  chip.title = "Copy " + label + " " + value;
+  chip.addEventListener("click", () =>
+    copyWithFeedback(value, chip, "Copied!"),
+  );
+  return chip;
+}
+
+// Drop a small copy button next to every product / ticket-type link on the page
+// (e.g. the products index rows and the ticket-types list "Edit" links).
+function addInlineIdButtons() {
+  const onProductsIndex = /\/admin\/(?:stores\/\d+\/)?products\/?$/.test(
+    location.pathname,
+  );
+
+  document.querySelectorAll('a[href*="/admin/products/"]').forEach((a) => {
+    if (a.closest(".breadcrumbs")) return;
+
+    const href = a.getAttribute("href") || "";
+    let id = null;
+    let label = null;
+    let m = href.match(/\/ticket-types\/(\d+)\/edit/);
+    if (m) {
+      id = m[1];
+      label = "ticket type";
+    } else {
+      m = href.match(/\/admin\/products\/(\d+)(?=\/|$)/);
+      if (m) {
+        id = m[1];
+        label = "product";
+      }
+    }
+    if (!id) return;
+
+    // Only decorate links inside list rows or the products index, so we don't
+    // clutter form footers ("Cancel"/"Setup") and one-off links.
+    if (!(a.closest("td") || onProductsIndex)) return;
+
+    // De-dupe per row so a product linked several times gets a single button.
+    const row = a.closest("tr, li, .row") || a.parentElement;
+    if (row && row.querySelector('.ext-id-copy[data-id="' + id + '"]')) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ext-id-copy";
+    btn.dataset.id = id;
+    btn.textContent = "📋";
+    btn.title = "Copy " + label + " ID " + id;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      copyWithFeedback(id, btn, "✓");
+    });
+    a.insertAdjacentElement("afterend", btn);
+  });
+}
+
+// Read every ticket type (id + title) from the rows on the Ticket Types page.
+function collectTicketTypesOnPage() {
+  const out = [];
+  const seen = new Set();
+  document.querySelectorAll('a[href*="/ticket-types/"]').forEach((a) => {
+    const m = (a.getAttribute("href") || "").match(
+      /\/ticket-types\/(\d+)\/edit/,
+    );
+    if (!m || seen.has(m[1])) return;
+    seen.add(m[1]);
+    let ttName = "";
+    const tr = a.closest("tr");
+    if (tr) {
+      const tds = tr.querySelectorAll("td");
+      if (tds[1])
+        ttName = (tds[1].textContent || "").replace(/\s+/g, " ").trim();
+    }
+    out.push({ id: m[1], name: ttName });
+  });
+  return out;
+}
+
+// Persist what we learned about the current product into the popup history.
+function recordProductHistory(ctx) {
+  if (!ctx.productId) return;
+
+  const ticketTypes = collectTicketTypesOnPage();
+  if (ctx.ticketTypeId && !ticketTypes.some((t) => t.id === ctx.ticketTypeId)) {
+    ticketTypes.push({ id: ctx.ticketTypeId, name: "" });
+  }
+
+  chrome.storage.local.get({ products: [] }, ({ products }) => {
+    const i = products.findIndex((p) => p.productId === ctx.productId);
+    const entry =
+      i >= 0 ? products[i] : { productId: ctx.productId, ticketTypes: [] };
+    if (ctx.name) entry.name = ctx.name;
+    if (ctx.slug) entry.slug = ctx.slug;
+    entry.lastSeen = Date.now();
+
+    // Merge ticket types, preferring any non-empty title we already had.
+    const byId = new Map(
+      (entry.ticketTypes || []).map((t) => [t.id, { ...t }]),
+    );
+    ticketTypes.forEach((t) => {
+      const existing = byId.get(t.id);
+      if (existing) {
+        if (t.name) existing.name = t.name;
+      } else {
+        byId.set(t.id, t);
+      }
+    });
+    entry.ticketTypes = [...byId.values()].sort(
+      (a, b) => Number(a.id) - Number(b.id),
+    );
+
+    // Move the just-visited product to the front, cap the history length.
+    if (i >= 0) products.splice(i, 1);
+    products.unshift(entry);
+    chrome.storage.local.set({ products: products.slice(0, 40) });
+  });
+}

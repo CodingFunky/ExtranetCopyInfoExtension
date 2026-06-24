@@ -1,29 +1,95 @@
 .order-id-copy-button {
-    background-color: #dbfdec; /* Green */
-    border: none;
-    border-radius: 5%;
-    padding: 10px 15px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    margin-left: 10px;
-    cursor:pointer;
-  }
+  background-color: #dbfdec; /* Green */
+  border: none;
+  border-radius: 5%;
+  padding: 10px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  margin-left: 10px;
+  cursor: pointer;
+}
 
-  /* Style for copy buttons */
+/* Style for copy buttons */
 .header-copy-button {
-    font-size: small;
-    cursor: pointer;
-    margin-left: 5px;
-    border: none;
-    background: none;
-    opacity: 0;
-    transition: opacity 0.3s; /* Smooth transition for opacity change */
+  font-size: small;
+  cursor: pointer;
+  margin-left: 5px;
+  border: none;
+  background: none;
+  opacity: 0;
+  transition: opacity 0.3s; /* Smooth transition for opacity change */
 }
 
 /* Show the button on column hover */
 .header-copy-button:hover {
-    opacity: 1;
+  opacity: 1;
+}
+
+/* ---- Product / ticket type ID copy (header chips + inline buttons) ---- */
+.ext-id-chips {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 12px;
+  vertical-align: middle;
+}
+
+.ext-id-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 5px 9px;
+  border: 1px solid #aee9c9;
+  border-radius: 6px;
+  background-color: #dbfdec;
+  color: #0b6b3a;
+  cursor: pointer;
+}
+
+.ext-id-chip:hover {
+  background-color: #c4f7dd;
+}
+
+.ext-id-chip__label {
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.ext-id-chip__value {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-weight: 700;
+}
+
+.ext-id-chip.ext-copied {
+  background-color: #9be7bf;
+}
+
+.ext-id-copy {
+  font-size: 12px;
+  line-height: 1;
+  margin-left: 6px;
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+  vertical-align: middle;
+}
+
+.ext-id-copy:hover {
+  opacity: 1;
+}
+
+td:hover > .ext-id-copy {
+  opacity: 0.8;
+}
+
+.ext-id-copy.ext-copied {
+  opacity: 1;
 }

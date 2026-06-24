@@ -6,9 +6,30 @@
     <script src="popup.js" defer></script>
   </head>
   <body>
-    <label class="switch">
-      <input type="checkbox" id="disableToggle" />
-      <span class="slider round"></span>
-    </label>
+    <header class="popup-header">
+      <span class="popup-title">Extranet Copy</span>
+      <label class="switch" title="Enable / disable on-page buttons">
+        <input type="checkbox" id="disableToggle" />
+        <span class="slider round"></span>
+      </label>
+    </header>
+
+    <section class="history">
+      <div class="history-head">
+        <span>History</span>
+        <button id="clearHistory" class="link-btn" type="button">Clear</button>
+      </div>
+      <input
+        id="filter"
+        class="filter"
+        type="search"
+        placeholder="Filter by name or ID…"
+      />
+      <div id="historyList" class="history-list"></div>
+      <p id="emptyState" class="empty">
+        No products yet. Open a product or ticket-types page on Liftopia and it
+        will show up here.
+      </p>
+    </section>
   </body>
 </html>
