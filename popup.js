@@ -131,6 +131,24 @@ document.addEventListener("DOMContentLoaded", function () {
     nm.textContent = p.name || "Product " + p.productId;
     head.appendChild(nm);
 
+    // Copy just this product (name + ID + its ticket types).
+    const copyProdBtn = document.createElement("button");
+    copyProdBtn.type = "button";
+    copyProdBtn.className = "copy-btn";
+    copyProdBtn.textContent = "Copy all";
+    copyProdBtn.title = "Copy this product and its ticket type IDs";
+    copyProdBtn.addEventListener("click", function () {
+      navigator.clipboard.writeText(formatProductBlock(p)).then(function () {
+        copyProdBtn.textContent = "Copied!";
+        copyProdBtn.classList.add("copied");
+        setTimeout(function () {
+          copyProdBtn.textContent = "Copy all";
+          copyProdBtn.classList.remove("copied");
+        }, 1000);
+      });
+    });
+    head.appendChild(copyProdBtn);
+
     // No ticket types known yet -> offer to fetch them.
     if (!(p.ticketTypes && p.ticketTypes.length)) {
       const ttBtn = document.createElement("button");
