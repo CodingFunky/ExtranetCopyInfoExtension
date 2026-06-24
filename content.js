@@ -653,3 +653,23 @@ async function copyAllProducts(btn, rows, label) {
     btn.dataset.busy = "0";
   }, 2500);
 }
+
+// Let the popup ask this page (which has the logged-in session) to fetch a
+// product's ticket types and save them to history. Registered unconditionally
+// so it works even when the on-page buttons are toggled off.
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg || msg.action !== "getTicketTypes" || !msg.productId) return;
+  fetchTicketTypes(msg.productId)
+    .then((ticketTypes) => {
+      upsertProductHistory({
+        productId: msg.productId,
+        name: msg.name,
+        ticketTypes,
+      });
+      sendResponse({ ok: true, count: ticketTypes.length });
+    })
+    .catch((err) => {
+      sendResponse({ ok: false, error: (err && err.message) || String(err) });
+    });
+  return true; // keep the message channel open for the async response
+});

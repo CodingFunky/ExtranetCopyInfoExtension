@@ -21,8 +21,67 @@ document.addEventListener("DOMContentLoaded", function () {
   const emptyEl = document.getElementById("emptyState");
   const filterEl = document.getElementById("filter");
   const clearBtn = document.getElementById("clearHistory");
+  const copyAllBtn = document.getElementById("copyAll");
 
   let products = [];
+
+  // Same readable block format the on-page "copy all" buttons use.
+  function formatProductBlock(p) {
+    const header =
+      (p.name ? p.name + " " : "") + "(Product ID: " + p.productId + ")";
+    const tts = p.ticketTypes || [];
+    if (tts.length === 0) return header + "\n  (no ticket types)";
+    return (
+      header +
+      "\n" +
+      tts.map((t) => "  " + (t.name || "Ticket type") + "\t" + t.id).join("\n")
+    );
+  }
+
+  // Ask a logged-in Liftopia tab to fetch this product's ticket type IDs and
+  // save them into history (the content script has the session cookies).
+  function fetchTicketTypesForProduct(p, btn) {
+    if (btn.dataset.busy === "1") return;
+    btn.dataset.busy = "1";
+    btn.textContent = "⏳";
+
+    function fail(message) {
+      btn.textContent = "⚠️";
+      btn.title = message || "Couldn't fetch ticket type IDs";
+      setTimeout(function () {
+        btn.textContent = "🎟️";
+        btn.title = "Get ticket type IDs for this product";
+        btn.dataset.busy = "0";
+      }, 1800);
+    }
+
+    chrome.tabs.query({ url: "https://www.liftopia.com/*" }, function (tabs) {
+      if (!tabs || tabs.length === 0) {
+        fail("Open a Liftopia tab, then try again");
+        return;
+      }
+      const tab = tabs.find((t) => t.active) || tabs[0];
+      chrome.tabs.sendMessage(
+        tab.id,
+        { action: "getTicketTypes", productId: p.productId, name: p.name },
+        function (resp) {
+          if (chrome.runtime.lastError || !resp || !resp.ok) {
+            fail(
+              (resp && resp.error) ||
+                (chrome.runtime.lastError &&
+                  chrome.runtime.lastError.message) ||
+                "Couldn't fetch ticket type IDs",
+            );
+            return;
+          }
+          // Success: storage.onChanged re-renders. If the product genuinely has
+          // no ticket types the button stays so it can be retried.
+          btn.textContent = resp.count > 0 ? "✓" : "0";
+          btn.dataset.busy = "0";
+        },
+      );
+    });
+  }
 
   function copyButton(value, titleText) {
     const b = document.createElement("button");
@@ -77,6 +136,19 @@ document.addEventListener("DOMContentLoaded", function () {
       slug.className = "product-slug";
       slug.textContent = p.slug;
       head.appendChild(slug);
+    }
+
+    // No ticket types known yet → offer to fetch them.
+    if (!(p.ticketTypes && p.ticketTypes.length)) {
+      const ttBtn = document.createElement("button");
+      ttBtn.type = "button";
+      ttBtn.className = "tt-fetch-btn";
+      ttBtn.textContent = "🎟️";
+      ttBtn.title = "Get ticket type IDs for this product";
+      ttBtn.addEventListener("click", function () {
+        fetchTicketTypesForProduct(p, ttBtn);
+      });
+      head.appendChild(ttBtn);
     }
     card.appendChild(head);
 
@@ -143,6 +215,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   filterEl.addEventListener("input", render);
+
+  copyAllBtn.addEventListener("click", function () {
+    const q = (filterEl.value || "").toLowerCase().trim();
+    const list = products.filter(function (p) {
+      return matches(p, q);
+    });
+    if (list.length === 0) return;
+
+    const text = list.map(formatProductBlock).join("\n\n");
+    navigator.clipboard.writeText(text).then(function () {
+      const original = copyAllBtn.textContent;
+      copyAllBtn.textContent = "Copied!";
+      setTimeout(function () {
+        copyAllBtn.textContent = original;
+      }, 1000);
+    });
+  });
 
   clearBtn.addEventListener("click", function () {
     chrome.storage.local.set({ products: [] });

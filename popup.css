@@ -39,6 +39,12 @@ body {
   margin-bottom: 6px;
 }
 
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .link-btn {
   border: none;
   background: none;
@@ -88,13 +94,14 @@ body {
 
 .product-head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
 
 .product-name {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 13px;
   font-weight: 700;
   overflow: hidden;
@@ -107,6 +114,21 @@ body {
   color: #9aa3b2;
   font-family: ui-monospace, Menlo, Consolas, monospace;
   flex-shrink: 0;
+}
+
+.tt-fetch-btn {
+  flex-shrink: 0;
+  border: 1px solid #d7dce3;
+  border-radius: 5px;
+  background: #f3f6fb;
+  font-size: 13px;
+  line-height: 1;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+
+.tt-fetch-btn:hover {
+  background: #e7edf6;
 }
 
 .id-row {
