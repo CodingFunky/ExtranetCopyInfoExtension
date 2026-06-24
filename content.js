@@ -189,6 +189,7 @@ function initProductIdFeature() {
   addIdHeaderChips(ctx);
   addInlineIdButtons();
   addCopyAllTicketTypesButton(ctx);
+  addProductTicketTypeLoaders();
   recordProductHistory(ctx);
 }
 
@@ -196,7 +197,7 @@ function initProductIdFeature() {
 // (name + ID) followed by every ticket type as "Name<tab>ID" lines, so it stays
 // readable and still pastes into a spreadsheet as two columns.
 function addCopyAllTicketTypesButton(ctx) {
-  const tts = collectTicketTypesOnPage();
+  const tts = collectTicketTypes(document);
   if (tts.length === 0) return;
   if (document.querySelector(".ext-copy-all")) return;
 
@@ -217,7 +218,7 @@ function addCopyAllTicketTypesButton(ctx) {
   btn.textContent = "Copy all ticket types";
   btn.title = "Copy the product and every ticket type name + ID";
   btn.addEventListener("click", () => {
-    const list = collectTicketTypesOnPage();
+    const list = collectTicketTypes(document);
     const rows = list.map((t) => (t.name || "Ticket type") + "\t" + t.id);
 
     let header = "";
@@ -371,11 +372,13 @@ function addInlineIdButtons() {
   });
 }
 
-// Read every ticket type (id + title) from the rows on the Ticket Types page.
-function collectTicketTypesOnPage() {
+// Read every ticket type (id + title) from the rows of a Ticket Types page.
+// Works on the live document or a document parsed from a background fetch.
+function collectTicketTypes(root) {
+  root = root || document;
   const out = [];
   const seen = new Set();
-  document.querySelectorAll('a[href*="/ticket-types/"]').forEach((a) => {
+  root.querySelectorAll('a[href*="/ticket-types/"]').forEach((a) => {
     const m = (a.getAttribute("href") || "").match(
       /\/ticket-types\/(\d+)\/edit/,
     );
@@ -393,28 +396,22 @@ function collectTicketTypesOnPage() {
   return out;
 }
 
-// Persist what we learned about the current product into the popup history.
-function recordProductHistory(ctx) {
-  if (!ctx.productId) return;
-
-  const ticketTypes = collectTicketTypesOnPage();
-  if (ctx.ticketTypeId && !ticketTypes.some((t) => t.id === ctx.ticketTypeId)) {
-    ticketTypes.push({ id: ctx.ticketTypeId, name: "" });
-  }
+// Upsert a product (and any ticket types we learned) into the popup history.
+function upsertProductHistory({ productId, name, slug, ticketTypes }) {
+  if (!productId) return;
 
   chrome.storage.local.get({ products: [] }, ({ products }) => {
-    const i = products.findIndex((p) => p.productId === ctx.productId);
-    const entry =
-      i >= 0 ? products[i] : { productId: ctx.productId, ticketTypes: [] };
-    if (ctx.name) entry.name = ctx.name;
-    if (ctx.slug) entry.slug = ctx.slug;
+    const i = products.findIndex((p) => p.productId === productId);
+    const entry = i >= 0 ? products[i] : { productId, ticketTypes: [] };
+    if (name) entry.name = name;
+    if (slug) entry.slug = slug;
     entry.lastSeen = Date.now();
 
     // Merge ticket types, preferring any non-empty title we already had.
     const byId = new Map(
       (entry.ticketTypes || []).map((t) => [t.id, { ...t }]),
     );
-    ticketTypes.forEach((t) => {
+    (ticketTypes || []).forEach((t) => {
       const existing = byId.get(t.id);
       if (existing) {
         if (t.name) existing.name = t.name;
@@ -426,9 +423,191 @@ function recordProductHistory(ctx) {
       (a, b) => Number(a.id) - Number(b.id),
     );
 
-    // Move the just-visited product to the front, cap the history length.
+    // Move the just-touched product to the front, cap the history length.
     if (i >= 0) products.splice(i, 1);
     products.unshift(entry);
     chrome.storage.local.set({ products: products.slice(0, 40) });
+  });
+}
+
+// Persist what we learned about the current product into the popup history.
+function recordProductHistory(ctx) {
+  if (!ctx.productId) return;
+
+  const ticketTypes = collectTicketTypes(document);
+  if (ctx.ticketTypeId && !ticketTypes.some((t) => t.id === ctx.ticketTypeId)) {
+    ticketTypes.push({ id: ctx.ticketTypeId, name: "" });
+  }
+
+  upsertProductHistory({
+    productId: ctx.productId,
+    name: ctx.name,
+    slug: ctx.slug,
+    ticketTypes,
+  });
+}
+
+// Fetch a product's Ticket Types page in the background (using the current
+// login session) and return its ticket types without navigating away.
+async function fetchTicketTypes(productId) {
+  const url =
+    "https://www.liftopia.com/admin/products/" + productId + "/ticket-types";
+  const res = await fetch(url, { credentials: "same-origin" });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+
+  const doc = new DOMParser().parseFromString(await res.text(), "text/html");
+  const tts = collectTicketTypes(doc);
+
+  // Zero rows is only trustworthy if this really is the ticket-types page
+  // (otherwise we were likely bounced to a login/error page).
+  if (tts.length === 0) {
+    const looksLikePage =
+      doc.querySelector('a[href*="/ticket-types/new"]') ||
+      /ticket types/i.test(doc.title || "");
+    if (!looksLikePage) throw new Error("Unexpected response (logged out?)");
+  }
+  return tts;
+}
+
+// On the products index, add a per-row "Ticket types" button that loads the IDs
+// inline (and into history) via a background fetch, no navigation required.
+function addProductTicketTypeLoaders() {
+  const onProductsIndex = /\/admin\/(?:stores\/\d+\/)?products\/?$/.test(
+    location.pathname,
+  );
+  if (!onProductsIndex) return;
+
+  document.querySelectorAll('a[href*="/admin/products/"]').forEach((a) => {
+    if (a.closest(".breadcrumbs")) return;
+    const m = (a.getAttribute("href") || "").match(
+      /\/admin\/products\/(\d+)\/edit/,
+    );
+    if (!m) return;
+
+    const cell = a.closest("td");
+    if (!cell || cell.querySelector(".ext-tt-load")) return;
+
+    const productId = m[1];
+    const name = a.textContent.trim();
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ext-tt-load";
+    btn.textContent = "Ticket types ▾";
+    btn.title = "Load this product's ticket type IDs";
+
+    const panel = document.createElement("div");
+    panel.className = "ext-tt-panel";
+    panel.style.display = "none";
+
+    let loaded = false;
+    let loading = false;
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const show = panel.style.display === "none";
+      panel.style.display = show ? "block" : "none";
+      btn.classList.toggle("ext-open", show);
+      if (!show || loaded || loading) return;
+
+      loading = true;
+      panel.textContent = "";
+      const msg = document.createElement("span");
+      msg.className = "ext-tt-msg";
+      msg.textContent = "Loading…";
+      panel.appendChild(msg);
+
+      try {
+        const tts = await fetchTicketTypes(productId);
+        loaded = true;
+        renderTicketTypePanel(panel, productId, name, tts);
+        upsertProductHistory({ productId, name, ticketTypes: tts });
+      } catch (err) {
+        panel.textContent = "";
+        const err1 = document.createElement("span");
+        err1.className = "ext-tt-msg ext-tt-error";
+        err1.textContent = "Couldn't load. ";
+        const link = document.createElement("a");
+        link.href =
+          "https://www.liftopia.com/admin/products/" +
+          productId +
+          "/ticket-types";
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = "Open page ↗";
+        err1.appendChild(link);
+        panel.appendChild(err1);
+      } finally {
+        loading = false;
+      }
+    });
+
+    // Sit after the product-ID copy button if it's already there.
+    const after =
+      a.nextElementSibling &&
+      a.nextElementSibling.classList.contains("ext-id-copy")
+        ? a.nextElementSibling
+        : a;
+    after.insertAdjacentElement("afterend", btn);
+    cell.appendChild(panel);
+  });
+}
+
+// Render the fetched ticket types into a product's inline panel.
+function renderTicketTypePanel(panel, productId, name, tts) {
+  panel.textContent = "";
+
+  if (tts.length === 0) {
+    const m = document.createElement("div");
+    m.className = "ext-tt-msg";
+    m.textContent = "No ticket types on this product.";
+    panel.appendChild(m);
+    return;
+  }
+
+  const head = document.createElement("div");
+  head.className = "ext-tt-head";
+  const count = document.createElement("span");
+  count.textContent = tts.length + " ticket types";
+  head.appendChild(count);
+
+  const copyAll = document.createElement("button");
+  copyAll.type = "button";
+  copyAll.className = "ext-tt-copyall";
+  copyAll.textContent = "Copy all";
+  copyAll.title = "Copy product + all ticket types";
+  copyAll.addEventListener("click", () => {
+    const header = name
+      ? name + " (Product ID: " + productId + ")"
+      : "Product ID: " + productId;
+    const text =
+      header +
+      "\n\n" +
+      tts.map((t) => (t.name || "Ticket type") + "\t" + t.id).join("\n");
+    copyWithFeedback(text, copyAll, "Copied!");
+  });
+  head.appendChild(copyAll);
+  panel.appendChild(head);
+
+  tts.forEach((t) => {
+    const row = document.createElement("div");
+    row.className = "ext-tt-item";
+
+    const lab = document.createElement("span");
+    lab.className = "ext-tt-name";
+    lab.textContent = t.name || "Ticket type";
+
+    const val = document.createElement("span");
+    val.className = "ext-tt-id";
+    val.textContent = t.id;
+
+    const cp = document.createElement("button");
+    cp.type = "button";
+    cp.className = "ext-id-copy";
+    cp.textContent = "📋";
+    cp.title = "Copy ticket type ID " + t.id;
+    cp.addEventListener("click", () => copyWithFeedback(t.id, cp, "✓"));
+
+    row.append(lab, val, cp);
+    panel.appendChild(row);
   });
 }
