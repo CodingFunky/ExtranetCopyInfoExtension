@@ -188,13 +188,14 @@ function initProductIdFeature() {
   const ctx = getProductContext();
   addIdHeaderChips(ctx);
   addInlineIdButtons();
-  addCopyAllTicketTypesButton();
+  addCopyAllTicketTypesButton(ctx);
   recordProductHistory(ctx);
 }
 
-// On the Ticket Types list page, add a single button that copies every ticket
-// type as "Name<tab>ID" lines (tab-separated so it pastes into a spreadsheet).
-function addCopyAllTicketTypesButton() {
+// On the Ticket Types list page, add a single button that copies the product
+// (name + ID) followed by every ticket type as "Name<tab>ID" lines, so it stays
+// readable and still pastes into a spreadsheet as two columns.
+function addCopyAllTicketTypesButton(ctx) {
   const tts = collectTicketTypesOnPage();
   if (tts.length === 0) return;
   if (document.querySelector(".ext-copy-all")) return;
@@ -214,12 +215,19 @@ function addCopyAllTicketTypesButton() {
   btn.type = "button";
   btn.className = "ext-copy-all";
   btn.textContent = "Copy all ticket types";
-  btn.title = "Copy every ticket type name + ID";
+  btn.title = "Copy the product and every ticket type name + ID";
   btn.addEventListener("click", () => {
     const list = collectTicketTypesOnPage();
-    const text = list
-      .map((t) => (t.name || "Ticket type") + "\t" + t.id)
-      .join("\n");
+    const rows = list.map((t) => (t.name || "Ticket type") + "\t" + t.id);
+
+    let header = "";
+    if (ctx && ctx.productId) {
+      header = ctx.name
+        ? ctx.name + " (Product ID: " + ctx.productId + ")"
+        : "Product ID: " + ctx.productId;
+    }
+
+    const text = header ? header + "\n\n" + rows.join("\n") : rows.join("\n");
     copyWithFeedback(text, btn, "Copied " + list.length + " ticket types!");
   });
 
