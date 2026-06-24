@@ -43,13 +43,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function fetchTicketTypesForProduct(p, btn) {
     if (btn.dataset.busy === "1") return;
     btn.dataset.busy = "1";
-    btn.textContent = "⏳";
+    btn.textContent = "...";
 
     function fail(message) {
-      btn.textContent = "⚠️";
+      btn.textContent = "Failed";
       btn.title = message || "Couldn't fetch ticket type IDs";
       setTimeout(function () {
-        btn.textContent = "🎟️";
+        btn.textContent = "Get TTs";
         btn.title = "Get ticket type IDs for this product";
         btn.dataset.busy = "0";
       }, 1800);
@@ -74,9 +74,9 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             return;
           }
-          // Success: storage.onChanged re-renders. If the product genuinely has
-          // no ticket types the button stays so it can be retried.
-          btn.textContent = resp.count > 0 ? "✓" : "0";
+          // Success: storage.onChanged re-renders (the button is recreated with
+          // the new ticket-type rows, or stays if the product genuinely has 0).
+          btn.textContent = resp.count > 0 ? "Done" : "0 TTs";
           btn.dataset.busy = "0";
         },
       );
@@ -131,19 +131,12 @@ document.addEventListener("DOMContentLoaded", function () {
     nm.textContent = p.name || "Product " + p.productId;
     head.appendChild(nm);
 
-    if (p.slug) {
-      const slug = document.createElement("span");
-      slug.className = "product-slug";
-      slug.textContent = p.slug;
-      head.appendChild(slug);
-    }
-
-    // No ticket types known yet → offer to fetch them.
+    // No ticket types known yet -> offer to fetch them.
     if (!(p.ticketTypes && p.ticketTypes.length)) {
       const ttBtn = document.createElement("button");
       ttBtn.type = "button";
       ttBtn.className = "tt-fetch-btn";
-      ttBtn.textContent = "🎟️";
+      ttBtn.textContent = "Get TTs";
       ttBtn.title = "Get ticket type IDs for this product";
       ttBtn.addEventListener("click", function () {
         fetchTicketTypesForProduct(p, ttBtn);
