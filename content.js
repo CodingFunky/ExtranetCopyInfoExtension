@@ -525,13 +525,14 @@ function addProductsIndexButtons() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ext-prod-copy";
-    btn.textContent = "Copy";
+    btn.textContent = "📋";
     btn.title = "Copy product name, ID, and all ticket types";
+    btn.setAttribute("aria-label", btn.title);
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
       if (btn.dataset.busy === "1") return;
       btn.dataset.busy = "1";
-      btn.textContent = "…";
+      btn.textContent = "⏳";
       try {
         const tts = await fetchTicketTypes(r.productId);
         upsertProductHistory({
@@ -546,12 +547,12 @@ function addProductsIndexButtons() {
             ticketTypes: tts,
           }),
         );
-        btn.textContent = "Copied!";
+        btn.textContent = "✓";
       } catch (err) {
-        btn.textContent = "Failed";
+        btn.textContent = "✗";
       }
       setTimeout(() => {
-        btn.textContent = "Copy";
+        btn.textContent = "📋";
         btn.dataset.busy = "0";
       }, 1500);
     });

@@ -121,23 +121,21 @@ td:hover > .ext-id-copy {
 
 /* ---- Products index: per-row copy + top "copy all" ---- */
 .ext-prod-copy {
-  margin-left: 8px;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
+  margin-left: 6px;
+  font-size: 14px;
   line-height: 1;
-  padding: 3px 8px;
-  border: 1px solid #aee9c9;
-  border-radius: 5px;
-  background-color: #dbfdec;
-  color: #0b6b3a;
+  padding: 2px 4px;
+  border: none;
+  border-radius: 4px;
+  background: none;
   cursor: pointer;
-  white-space: nowrap;
+  opacity: 0.6;
+  transition: opacity 0.2s;
   vertical-align: middle;
 }
 
 .ext-prod-copy:hover {
-  background-color: #c4f7dd;
+  opacity: 1;
 }
 
 .ext-copy-all-products {
