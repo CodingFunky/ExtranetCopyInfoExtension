@@ -8,12 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   disableToggle.addEventListener("change", function () {
     const isDisabled = !this.checked;
-    chrome.storage.sync.set({ disabled: isDisabled }, function () {
-      chrome.runtime.sendMessage({
-        action: "toggleDisable",
-        value: isDisabled,
-      });
-    });
+    // Content scripts read this from storage on page load (no live messaging).
+    chrome.storage.sync.set({ disabled: isDisabled });
   });
 
   // ---- Product / ticket type history ----
@@ -103,12 +99,22 @@ document.addEventListener("DOMContentLoaded", function () {
     return b;
   }
 
-  function idRow(extraClass, labelText, value, copyTitle) {
+  function idRow(extraClass, labelText, value, copyTitle, href) {
     const row = document.createElement("div");
     row.className = "id-row " + extraClass;
 
-    const label = document.createElement("span");
-    label.className = "id-label";
+    let label;
+    if (href) {
+      label = document.createElement("a");
+      label.className = "id-label id-link";
+      label.href = href;
+      label.target = "_blank";
+      label.rel = "noopener";
+      label.title = "Open ticket type edit page";
+    } else {
+      label = document.createElement("span");
+      label.className = "id-label";
+    }
     label.textContent = labelText;
 
     const val = document.createElement("span");
@@ -126,9 +132,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const head = document.createElement("div");
     head.className = "product-head";
 
-    const nm = document.createElement("span");
+    const nm = document.createElement("a");
     nm.className = "product-name";
     nm.textContent = p.name || "Product " + p.productId;
+    nm.href =
+      "https://www.liftopia.com/admin/products/" + p.productId + "/edit";
+    nm.target = "_blank";
+    nm.rel = "noopener";
+    nm.title = "Open product page";
     head.appendChild(nm);
 
     // Copy just this product (name + ID + its ticket types).
@@ -173,12 +184,20 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     (p.ticketTypes || []).forEach(function (t) {
+      const href =
+        t.url ||
+        "https://www.liftopia.com/admin/products/" +
+          p.productId +
+          "/ticket-types/" +
+          t.id +
+          "/edit";
       card.appendChild(
         idRow(
           "tt-row",
           t.name || "Ticket type",
           t.id,
           "Copy ticket type ID " + t.id,
+          href,
         ),
       );
     });

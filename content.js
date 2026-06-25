@@ -63,7 +63,6 @@ chrome.storage.sync.get("disabled", (data) => {
         copyBtn.onclick = function () {
           let textToCopy = "";
 
-          console.log("clicked");
           // Check if the text contains a ticket number pattern ("T" followed by numbers)
           if (/T\d+/.test(td.textContent)) {
             // Splitting text content based on the pattern "T" followed by numbers
@@ -89,7 +88,6 @@ chrome.storage.sync.get("disabled", (data) => {
           // Remove the clipboard icon "📋" from the end of the text
           textToCopy = textToCopy.replace(/📋$/u, "");
           textToCopy = textToCopy.replace(/✅$/u, "");
-          console.log(textToCopy);
 
           // Copy accumulated text to clipboard
           navigator.clipboard.writeText(textToCopy).then(() => {
@@ -409,7 +407,10 @@ function collectTicketTypes(root) {
       if (tds[1])
         ttName = (tds[1].textContent || "").replace(/\s+/g, " ").trim();
     }
-    out.push({ id: m[1], name: ttName });
+    // Keep the edit URL (it carries the product slug) for popup links.
+    let url = a.getAttribute("href") || "";
+    if (url.startsWith("/")) url = "https://www.liftopia.com" + url;
+    out.push({ id: m[1], name: ttName, url });
   });
   return out;
 }
@@ -433,6 +434,7 @@ function upsertProductHistory({ productId, name, slug, ticketTypes }) {
       const existing = byId.get(t.id);
       if (existing) {
         if (t.name) existing.name = t.name;
+        if (t.url) existing.url = t.url;
       } else {
         byId.set(t.id, t);
       }
